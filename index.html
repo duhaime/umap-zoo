@@ -1,6 +1,7 @@
 <html>
 <head>
   <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+  <link href='https://fonts.googleapis.com/css?family=Barriecito' rel='stylesheet'>
   <style>
   html,
   body {
@@ -16,13 +17,24 @@
     width: 100%;
     height: 100%;
   }
+  h1 {
+    color: #fff;
+    text-align: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    font-family: 'Barriecito', cursive;
+    letter-spacing: 0.05em;
+    font-size: 65px;
+  }
   </style>
 </head>
 <body>
   <script src='assets/three.min.js'></script>
-  <script src='assets/TrackballControls.js'></script>
-  <script src='assets/trackball-controls.min.js'></script>
   <script src='assets/tweenlite.min.js'></script>
+  <script src='assets/trackball-controls.min.js'></script>
+
+  <h1>UMAP ZOO</h1>
 
   <script type='x-shader/x-vertex' id='vertex-shader'>
     precision highp float;
@@ -60,6 +72,7 @@
 
   var state = {
         transitioning: false,
+        mouse: {x: 0, y: 0},
       },
       mesh,
       BA = THREE.BufferAttribute,
@@ -75,7 +88,9 @@
       renderer = new THREE.WebGLRenderer(renderConfig);
   controls.target = new THREE.Vector3(0, 0, 0.75);
   controls.panSpeed = 0.4;
+  controls.enabled = false;
   camera.position.set(0, 0, -2);
+  scene.add(camera);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(w, h);
   container.appendChild(renderer.domElement);
@@ -91,7 +106,7 @@
   function render() {
     requestAnimationFrame(render);
     renderer.render(scene, camera);
-    controls.update();
+    if (controls) controls.update();
     if (mesh) mesh.rotation.y += 0.002;
   }
 
@@ -168,11 +183,11 @@
 
   var options = [
     'crocodile_2.json',
-    'armadillo_2.json',
-    'bison.json',
-    'seahorse_2.json',
-    'cockatiel.json',
     'cow.json',
+    'seahorse_2.json',
+    'armadillo_2.json',
+    'cockatiel.json',
+    'bison.json',
     'shark.json',
     'deer.json',
     'lizard.json',
@@ -203,6 +218,16 @@
     get('data/json/' + options[selectedIdx], function(data) {
       updatePoints(data[selectedDims]);
     })
+  })
+
+  window.addEventListener('mousemove', function(e) {
+    var maxSpeed = {x: 0, y: 0.005};
+    var speedX = Math.min((e.clientX - state.mouse.x) * 0.01, maxSpeed.x);
+    var speedY = Math.min((state.mouse.y - e.clientY) * 0.01, maxSpeed.y);
+    camera.position.x += Math.max(speedX, -maxSpeed.x);
+    camera.position.y += Math.max(speedY, -maxSpeed.y);
+    state.mouse.x = e.clientX;
+    state.mouse.y = e.clientY;
   })
 
   render();
