@@ -1,0 +1,212 @@
+<html>
+<head>
+  <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+  <style>
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(#333,#111);
+  }
+  body {
+    margin: 0;
+    overflow: hidden;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+  }
+  </style>
+</head>
+<body>
+  <script src='assets/three.min.js'></script>
+  <script src='assets/TrackballControls.js'></script>
+  <script src='assets/trackball-controls.min.js'></script>
+  <script src='assets/tweenlite.min.js'></script>
+
+  <script type='x-shader/x-vertex' id='vertex-shader'>
+    precision highp float;
+
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+    uniform float transition;
+
+    attribute vec3 position;
+    attribute vec3 translation;
+    attribute vec3 target;
+
+    void main() {
+      // set point position
+      vec3 pos1 = position + translation;
+      vec3 pos2 = position + target;
+      vec3 pos = mix(pos1, pos2, transition);
+      vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+      vec4 projected = projectionMatrix * mv;
+      gl_Position = projected;
+      gl_PointSize = 1.0/-mv.z;
+    }
+  </script>
+
+  <script type='x-shader/x-fragment' id='fragment-shader'>
+    precision highp float;
+
+    void main() {
+      if (length(gl_PointCoord - vec2(0.5)) > 0.5) discard;
+      gl_FragColor = vec4(1.0);
+    }
+  </script>
+
+  <script>
+
+  var state = {
+        transitioning: false,
+      },
+      mesh,
+      BA = THREE.BufferAttribute,
+      IBA = THREE.InstancedBufferAttribute,
+      Arr = Float32Array,
+      container = document.querySelector('body'),
+      w = container.clientWidth,
+      h = container.clientHeight,
+      scene = new THREE.Scene(),
+      camera = new THREE.PerspectiveCamera(75, w/h, 0.001, 100),
+      controls = new THREE.TrackballControls(camera, container),
+      renderConfig = {antialias: true, alpha: true},
+      renderer = new THREE.WebGLRenderer(renderConfig);
+  controls.target = new THREE.Vector3(0, 0, 0.75);
+  controls.panSpeed = 0.4;
+  camera.position.set(0, 0, -2);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(w, h);
+  container.appendChild(renderer.domElement);
+
+  window.addEventListener('resize', function() {
+    w = container.clientWidth;
+    h = container.clientHeight;
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  })
+
+  function render() {
+    requestAnimationFrame(render);
+    renderer.render(scene, camera);
+    controls.update();
+    if (mesh) mesh.rotation.y += 0.002;
+  }
+
+  function get(url, onSuccess, onErr, onProgress) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+          if (onSuccess) onSuccess(JSON.parse(xhr.responseText))
+        } else {
+          if (onErr) onErr(xhr)
+        }
+      };
+    };
+    xhr.open('GET', url, true);
+    xhr.send();
+  }
+
+  function drawPoints(d) {
+    var geometry  = new THREE.InstancedBufferGeometry(),
+        translations = getTranslations(d);
+    geometry.addAttribute('position', new BA(new Arr([0, 0, 0]), 3));
+    geometry.addAttribute('translation', new IBA(translations, 3, true, 1));
+    geometry.addAttribute('target', new IBA(translations, 3, true, 1));
+    var material = new THREE.RawShaderMaterial({
+      vertexShader: document.getElementById('vertex-shader').textContent,
+      fragmentShader: document.getElementById('fragment-shader').textContent,
+      uniforms: {
+        transition: {type: 'f', value: 0},
+      }
+    });
+    mesh = new THREE.Points(geometry, material);
+    mesh.frustumCulled = false; // prevent the mesh from being clipped on drag
+    scene.add(mesh);
+  }
+
+  function getTranslations(d) {
+    console.log(' * loading', options[selectedIdx]);
+    var iter = 0,
+        translations = new Arr(d.length * 3);
+    for (var i=0; i<d.length; i++) {
+      translations[iter++] = d[i][0];
+      translations[iter++] = d[i][1];
+      translations[iter++] = d[i].length == 3 ? d[i][2] : 0;
+    }
+    return translations;
+  }
+
+  function updatePoints(d) {
+    if (state.transitioning) return;
+    state.transitioning = true;
+    var translations = getTranslations(d);
+    mesh.geometry.attributes.target.array = translations;
+    mesh.geometry.attributes.target.needsUpdate = true;
+    TweenLite.to(mesh.material.uniforms.transition, 1, {
+      value: 1.0,
+      onComplete: function() {
+        mesh.geometry.attributes.translation.array = translations;
+        mesh.geometry.attributes.translation.needsUpdate = true;
+        setTimeout(function() {
+          mesh.material.uniforms.transition = {
+            value: 0,
+            type: 'f',
+          };
+          state.transitioning = false;
+        })
+      }
+    })
+  }
+
+  /**
+  * Data
+  **/
+
+  var options = [
+    'crocodile_2.json',
+    'armadillo_2.json',
+    'bison.json',
+    'seahorse_2.json',
+    'cockatiel.json',
+    'cow.json',
+    'shark.json',
+    'deer.json',
+    'lizard.json',
+    'snek_2.json',
+    'tuna.json',
+    'turtle.json',
+    'wolf.json',
+    'dachshund.json',
+    'bird_2.json',
+  ],
+  selectedIdx = 0,
+  selectedDims = '2d';
+
+  get('data/json/' + options[selectedIdx], function(data) {
+    drawPoints(data[selectedDims]);
+  })
+
+  window.addEventListener('click', function() {
+    selectedDims = selectedDims == '2d' ? '3d' : '2d';
+    get('data/json/' + options[selectedIdx], function(data) {
+      updatePoints(data[selectedDims]);
+    })
+  })
+
+  window.addEventListener('keydown', function() {
+    selectedIdx++;
+    if (selectedIdx >= options.length) selectedIdx = 0;
+    get('data/json/' + options[selectedIdx], function(data) {
+      updatePoints(data[selectedDims]);
+    })
+  })
+
+  render();
+
+  </script>
+</body>
+</html>

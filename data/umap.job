@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#SBATCH --array=1-500
+#SBATCH --partition=scavenge
+#SBATCH --mem=64g
+#SBATCH --time=1-00:00:00
+#SBATCH --mail-type=ALL
+
+# load a python environment with dependencies installed & run
+module load Python/3.6.4-iomkl-2018a
+python distribute.py ${SLURM_ARRAY_TASK_ID}
