@@ -1,6 +1,7 @@
 <html>
 <head>
   <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+  <meta name='viewport' content='width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=no'>
   <link href='https://fonts.googleapis.com/css?family=Barriecito' rel='stylesheet'>
   <style>
   html,
@@ -16,6 +17,7 @@
   canvas {
     width: 100%;
     height: 100%;
+    margin-top: -20px;
   }
   h1 {
     color: #fff;
@@ -23,18 +25,192 @@
     position: absolute;
     left: 0;
     right: 0;
-    font-family: 'Barriecito', cursive;
+    font-family: 'Barriecito', courier;
     letter-spacing: 0.05em;
     font-size: 65px;
+    margin: 30px;
+    line-height: 65px;
+  }
+  #logo {
+    height: 60px;
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    margin-left: -170px;
+    display: none;
+  }
+  #bottom {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    text-align: center;
+  }
+  #explanation {
+    margin-top: 20px;
+    max-width: 60%;
+    color: #fff;
+    margin: 0 auto;
+    right: 0;
+    left: 0;
+    font-family: arial;
+    font-size: 11px;
+    line-height: 14px;
+    letter-spacing: 0.05em;
+    text-align: left;
+  }
+  #dimension-selector {
+    width: 150px;
+    height: 30px;
+    background: inherit;
+    display: inline-block;
+    margin-bottom: 25px;
+    border: 1px solid #777;
+  }
+  a {
+    color: #777;
+    text-decoration: none;
+  }
+  button {
+    padding: 10px 20px;
+    background: #fff;
+    font-size: 14px;
+    border: none;
+    border-radius: 2px;
+  }
+  .chevron {
+    position: absolute;
+    height: 100px;
+    top: 50%;
+    margin-top: -70px;
+    transition: transform 0.5s;
+    cursor: pointer;
+  }
+  .chevron:hover {
+    opacity: 0.7;
+  }
+  #chevron-left {
+    left: 50px;
+    transform: translate(-200px,0) rotate(-180deg);
+  }
+  #chevron-right {
+    transform: rotate(180deg);
+    right: 50px;
+    transform: translate(200px,0);
+  }
+  #dimension-selector {
+    position: relative;
+    cursor: pointer;
+  }
+  #dimension-selector * {
+    width: 50%;
+    height: 100%;
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+  }
+  #select-3d {
+    left: 0;
+    right: 50%;
+  }
+  #select-2d {
+    right: 0;
+    left: 50%;
+  }
+  #select-2d::after,
+  #select-3d::after {
+    position: relative;
+    line-height: 30px;
+    font-family: courier;
+    color: #fff;
+    transition: color 1s;
+  }
+  #select-2d.active::after,
+  #select-3d.active::after {
+    color: #000;
+  }
+  #select-2d::after {
+    content: '2D';
+  }
+  #select-3d::after {
+    content: '3D';
+  }
+  #dimension-selected {
+    position: absolute;
+    background: #eee;
+    transition: transform 1s;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    left: 0;
+    z-index: 0;
+    transform: translate(0, 0);
+  }
+  #github-icon {
+    width: 30px;
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+  }
+  #github-icon img {
+    width: 100%;
+  }
+  @media(max-width: 600px) {
+    h1 {
+      font-size: 50px;
+      margin: 10px;
+    }
+    #explanation {
+      max-width: 100%;
+      margin: 0 20px;
+    }
+    .chevron {
+      height: 50px;
+    }
+    #chevron-left {
+      left: -5px;
+    }
+    #chevron-right {
+      right: -5px;
+    }
+    #bottom {
+      bottom: 15px;
+    }
+    #github-icon {
+      width: 20px;
+      bottom: 5px;
+      right: 5px;
+    }
   }
   </style>
 </head>
 <body>
-  <script src='assets/three.min.js'></script>
-  <script src='assets/tweenlite.min.js'></script>
-  <script src='assets/trackball-controls.min.js'></script>
+  <script src='assets/js/three.min.js'></script>
+  <script src='assets/js/tweenlite.min.js'></script>
+  <script src='assets/js/trackball-controls.min.js'></script>
 
   <h1>UMAP ZOO</h1>
+  <img id='logo' alt='UMAP ZOO' src='assets/img/umap-zoo.png'/>
+
+  <img class='chevron' id='chevron-left' src='assets/img/chevron.png' />
+  <img class='chevron' id='chevron-right' src='assets/img/chevron.png' />
+
+  <div id='bottom'>
+    <div id='dimension-selector'>
+      <div id='select-2d'></div>
+      <div id='select-3d' class='active'></div>
+      <div id='dimension-selected'></div>
+    </div>
+    <div id='explanation'>
+      This site uses the <a href='https://github.com/lmcinnes/umap' target='_blank'>UMAP</a> algorithm and <a href='https://threejs.org/' target='_blank'>THREE.js</a> to project 3D Wavefront files into 2D. For information on how UMAP works, see the <a href='https://umap-learn.readthedocs.io/en/latest/how_umap_works.html' target='_blank'>conceptual overview</a> or <a href='https://arxiv.org/abs/1802.03426'>technical paper</a> written by the library's author, Leland McInnes.
+    </div>
+  </div>
+
+  <a id='github-icon' href='https://github.com/duhaime/umap-zoo'>
+    <img src='assets/img/github.svg' />
+  </a>
 
   <script type='x-shader/x-vertex' id='vertex-shader'>
     precision highp float;
@@ -89,7 +265,7 @@
   controls.target = new THREE.Vector3(0, 0, 0.75);
   controls.panSpeed = 0.4;
   controls.enabled = false;
-  camera.position.set(0, 0, -2);
+  camera.position.set(0, 0, -2.4);
   scene.add(camera);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(w, h);
@@ -139,12 +315,11 @@
       }
     });
     mesh = new THREE.Points(geometry, material);
-    mesh.frustumCulled = false; // prevent the mesh from being clipped on drag
+    mesh.frustumCulled = false; // prevent from clipping on drag
     scene.add(mesh);
   }
 
   function getTranslations(d) {
-    console.log(' * loading', options[selectedIdx]);
     var iter = 0,
         translations = new Arr(d.length * 3);
     for (var i=0; i<d.length; i++) {
@@ -155,30 +330,123 @@
     return translations;
   }
 
-  function updatePoints(d) {
+  function updatePoints() {
     if (state.transitioning) return;
     state.transitioning = true;
-    var translations = getTranslations(d);
-    mesh.geometry.attributes.target.array = translations;
-    mesh.geometry.attributes.target.needsUpdate = true;
-    TweenLite.to(mesh.material.uniforms.transition, 1, {
-      value: 1.0,
-      onComplete: function() {
-        mesh.geometry.attributes.translation.array = translations;
-        mesh.geometry.attributes.translation.needsUpdate = true;
-        setTimeout(function() {
-          mesh.material.uniforms.transition = {
-            value: 0,
-            type: 'f',
-          };
-          state.transitioning = false;
-        })
-      }
+    get('data/json/' + options[selectedIdx], function(data) {
+      var d = data[selectedDims];
+      var translations = getTranslations(d);
+      mesh.geometry.attributes.target.array = translations;
+      mesh.geometry.attributes.target.needsUpdate = true;
+      TweenLite.to(mesh.material.uniforms.transition, 1, {
+        value: 1.0,
+        onComplete: function() {
+          mesh.geometry.attributes.translation.array = translations;
+          mesh.geometry.attributes.translation.needsUpdate = true;
+          setTimeout(function() {
+            mesh.material.uniforms.transition = {
+              value: 0,
+              type: 'f',
+            };
+            state.transitioning = false;
+          })
+        }
+      })
     })
   }
 
+  function addChevrons() {
+    var left = document.querySelector('#chevron-left'),
+        right = document.querySelector('#chevron-right');
+    setTimeout(function() {
+      left.style.transform = 'translate(0,0)';
+    }, 500)
+    setTimeout(function() {
+      right.style.transform = 'translate(0,0) rotate(180deg)';
+    }, 700)
+
+    left.addEventListener('click', decrementSelectedIdx)
+    right.addEventListener('click', incrementSelectedIdx)
+  }
+
+  function decrementSelectedIdx() {
+    selectedIdx -= 1;
+    if (selectedIdx < 0) selectedIdx = options.length-1;
+    updatePoints()
+  }
+
+  function incrementSelectedIdx() {
+    selectedIdx++;
+    if (selectedIdx >= options.length) selectedIdx = 0;
+    updatePoints()
+  }
+
+  function toggleDimensions() {
+    newDims = selectedDims == '2d' ? '3d' : '2d';
+    setSelectedDims(newDims);
+    updatePoints();
+  }
+
+  function setSelectedDims(newDims) {
+    if (newDims == selectedDims) return;
+    var d2 = document.querySelector('#select-2d'),
+        d3 = document.querySelector('#select-3d'),
+        elem = document.querySelector('#dimension-selected');
+    if (newDims == '2d') {
+      selectedDims = '2d';
+      d2.className = 'active';
+      d3.className = '';
+      elem.style.transform = 'translate(100%,0)';
+    }
+    else if (newDims == '3d') {
+      selectedDims = '3d';
+      d2.className = '';
+      d3.className = 'active';
+      elem.style.transform = 'translate(0,0)';
+    }
+  }
+
   /**
-  * Data
+  * Event listeners
+  **/
+
+  window.addEventListener('keydown', function(e) {
+    if (state.transitioning) return;
+    if (e.keyCode == 37) incrementSelectedIdx() // left arrow
+    else if (e.keyCode == 32) incrementSelectedIdx() // space bar
+    else if (e.keyCode == 39) decrementSelectedIdx() // right arrow
+    else if (e.keyCode == 68) toggleDimensions() // d key
+    else if (e.keyCode == 78) { // n key
+      incrementSelectedIdx();
+      setSelectedDims('2d');
+      updatePoints();
+    }
+  })
+
+  window.addEventListener('mousemove', function(e) {
+    var maxSpeed = {x: 0, y: 0.0015};
+    var speedX = Math.min((e.clientX - state.mouse.x) * 0.01, maxSpeed.x);
+    var speedY = Math.min((state.mouse.y - e.clientY) * 0.01, maxSpeed.y);
+    camera.position.x += Math.max(speedX, -maxSpeed.x);
+    camera.position.y += Math.max(speedY, -maxSpeed.y);
+    state.mouse.x = e.clientX;
+    state.mouse.y = e.clientY;
+  })
+
+  var dimSelector = document.querySelector('#dimension-selector');
+  dimSelector.addEventListener('click', function(e) {
+    if (e.target.id == 'select-2d') {
+      setSelectedDims('2d');
+      updatePoints();
+    }
+    else if (e.target.id == 'select-3d') {
+      setSelectedDims('3d');
+      updatePoints();
+    }
+  });
+
+  /**
+  * Main
   **/
 
   var options = [
@@ -198,38 +466,19 @@
     'dachshund.json',
     'bird_2.json',
   ],
-  selectedIdx = 0,
-  selectedDims = '2d';
+  selectedIdx = 0;
+  selectedDims = '3d';
 
   get('data/json/' + options[selectedIdx], function(data) {
     drawPoints(data[selectedDims]);
+    // project the first sample
+    setTimeout(function() {
+      setSelectedDims('2d');
+      updatePoints();
+    }, 1400)
   })
 
-  window.addEventListener('click', function() {
-    selectedDims = selectedDims == '2d' ? '3d' : '2d';
-    get('data/json/' + options[selectedIdx], function(data) {
-      updatePoints(data[selectedDims]);
-    })
-  })
-
-  window.addEventListener('keydown', function() {
-    selectedIdx++;
-    if (selectedIdx >= options.length) selectedIdx = 0;
-    get('data/json/' + options[selectedIdx], function(data) {
-      updatePoints(data[selectedDims]);
-    })
-  })
-
-  window.addEventListener('mousemove', function(e) {
-    var maxSpeed = {x: 0, y: 0.005};
-    var speedX = Math.min((e.clientX - state.mouse.x) * 0.01, maxSpeed.x);
-    var speedY = Math.min((state.mouse.y - e.clientY) * 0.01, maxSpeed.y);
-    camera.position.x += Math.max(speedX, -maxSpeed.x);
-    camera.position.y += Math.max(speedY, -maxSpeed.y);
-    state.mouse.x = e.clientX;
-    state.mouse.y = e.clientY;
-  })
-
+  addChevrons();
   render();
 
   </script>
