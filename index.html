@@ -204,7 +204,7 @@
       <div id='dimension-selected'></div>
     </div>
     <div id='explanation'>
-      This site uses the <a href='https://github.com/lmcinnes/umap' target='_blank'>UMAP</a> algorithm and <a href='https://threejs.org/' target='_blank'>THREE.js</a> to project 3D Wavefront files into 2D. For information on how UMAP works, see the <a href='https://umap-learn.readthedocs.io/en/latest/how_umap_works.html' target='_blank'>conceptual overview</a> or <a href='https://arxiv.org/abs/1802.03426'>technical paper</a> written by the library's author, Leland McInnes.
+      This site combines the <a href='https://github.com/lmcinnes/umap' target='_blank'>UMAP</a> algorithm with <a href='https://threejs.org/' target='_blank'>THREE.js</a> to project 3D Wavefront files into 2D. For information on how UMAP works, see the <a href='https://umap-learn.readthedocs.io/en/latest/how_umap_works.html' target='_blank'>conceptual overview</a> or <a href='https://arxiv.org/abs/1802.03426'>technical paper</a> written by the library's author, Leland McInnes.
     </div>
   </div>
 
@@ -420,6 +420,11 @@
       incrementSelectedIdx();
       setSelectedDims('2d');
       updatePoints();
+    } else if (e.keyCode == 84) { // t key
+      options.push('trump.json');
+      selectedIdx = options.length-1;
+      setSelectedDims('3d');
+      updatePoints();
     }
   })
 
@@ -435,6 +440,7 @@
 
   var dimSelector = document.querySelector('#dimension-selector');
   dimSelector.addEventListener('click', function(e) {
+    if (state.transitioning) return;
     if (e.target.id == 'select-2d') {
       setSelectedDims('2d');
       updatePoints();

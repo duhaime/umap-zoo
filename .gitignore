@@ -3,3 +3,4 @@
 *.pem
 *.swp
 data/out
+.ipynb_checkpoints

@@ -39,6 +39,25 @@ def get_domain(v):
   '''Return the min,max of array `v`'''
   return [np.min(v), np.max(v)]
 
+def get_model_json(animal_name):
+  '''Process the data for an animal with `animal_name` in its filename'''
+  files = [j for j in glob.glob('out/*.npy') if '50000' in j and animal_name in j]
+  d2_files = [j for j in files if '2d' in j]
+  d3_files = [j for j in files if '3d' in j]
+  d2 = np.load(d2_files[0])
+  d3 = np.load(d3_files[0])
+  d2 = center(d2)
+  d3 = center(d3)
+  if rotations.get(animal_name, False):
+    d3 = rotate(d3, rotations[animal_name], 'x')
+  d2 = [[round(k, 4) for k in j] for j in d2.tolist()]
+  d3 = [[round(k, 4) for k in j] for j in d3.tolist()]
+  with open('json/' + animal_name + '.json', 'w') as out:
+    json.dump({
+      '2d': d2,
+      '3d': d3,
+    }, out)
+
 # good animals
 r = np.pi/2
 rotations = {
@@ -59,21 +78,10 @@ rotations = {
   'shark': 0,
 }
 
-if not os.path.exists('json'): os.makedirs('jsons')
+if __name__ == '__main__':
 
-for i in rotations:
-  files = [j for j in glob.glob('out/*.npy') if '50000' in j and i in j]
-  d2_files = [j for j in files if '2d' in j]
-  d3_files = [j for j in files if '3d' in j]
-  d2 = np.load(d2_files[0])
-  d3 = np.load(d3_files[0])
-  d2 = center(d2)
-  d3 = center(d3)
-  if rotations[i]: d3 = rotate(d3, rotations[i], 'x')
-  d2 = [[round(k, 4) for k in j] for j in d2.tolist()]
-  d3 = [[round(k, 4) for k in j] for j in d3.tolist()]
-  with open('json/' + i + '.json', 'w') as out:
-    json.dump({
-      '2d': d2,
-      '3d': d3,
-    }, out)
+  if not os.path.exists('json'):
+    os.makedirs('jsons')
+
+  for i in rotations:
+    get_model_json(i)
